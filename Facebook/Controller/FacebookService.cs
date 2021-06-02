@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 
-namespace ConsoleApplication
+namespace Facebook
 {
     public interface IFacebookService
     {

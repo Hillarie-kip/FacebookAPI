@@ -1,4 +1,4 @@
-namespace ConsoleApplication
+namespace Facebook
 {
     public class Account
     {
