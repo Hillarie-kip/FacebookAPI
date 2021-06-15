@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -7,7 +8,11 @@ namespace Facebook
 {
     public class FaceBookController
     {
+        public class PublishImagesResponseModel
+        {
+            public string id { get; set; }
 
+        }
 
         public FaceBookController(string pageId, string accessToken)
         {
@@ -15,36 +20,46 @@ namespace Facebook
             FacebookSettings.FB_ACCESS_TOKEN = accessToken;
         }
 
-        public static async Task<string> PublishMessage(string message)
+        //this will respond with processed facebook image id that you can save somewhere  then publish later in an array
+        public static string PublishedImagesID(string message, string ImageID)
+        {
+
+
+
+            var postOnWallTask2 = PublishImages(message, ImageID);
+            Task.WaitAll(postOnWallTask2);
+
+
+            var tokenResponse = JsonConvert.DeserializeObject<PublishImagesResponseModel>(postOnWallTask2.Result);
+          
+            return tokenResponse.id;
+        }
+
+        //uploading single image
+        public static async Task<string> PublishImages(string message, string ImageID)
         {
             using (var httpClient = new HttpClient())
             {
                 httpClient.BaseAddress = new Uri(FacebookSettings.FB_BASE_ADDRESS);
-                var names = new List<string>() { "https://homeapi.esquekenya.com/api/MaqaoFile/PropertyDetailImage?ImageID=1609741506", "https://homeapi.esquekenya.com/api/MaqaoFile/PropertyDetailImage?ImageID=1609741553" };
 
 
-                var parametters = new Dictionary<string, string>
-                {
+                FormUrlEncodedContent content = new FormUrlEncodedContent(
+                new List<KeyValuePair<string, string>>
+             {
+                new KeyValuePair<string, string>("access_token", FacebookSettings.FB_ACCESS_TOKEN),
+                new KeyValuePair<string, string>("published", "false"),
+                new KeyValuePair<string, string>("caption", message),
+                new KeyValuePair<string, string>("url", "https://homeapi.esquekenya.com/api/MaqaoFile/FBAdImage?ImageID="+ImageID),
+
+             });
 
 
-                    { "access_token", FacebookSettings.FB_ACCESS_TOKEN },
-                    { "message", message },
-                    { "published", "true" },
-                    { "url", "https://homeapi.esquekenya.com/api/MaqaoFile/PropertyDetailImage?ImageID=1609741506" }
-
-                };
-
-
-
-
-
-                var encodedContent = new FormUrlEncodedContent(parametters);
-
-                var result = await httpClient.PostAsync($"{FacebookSettings.FB_PAGE_ID}/photos", encodedContent);
-                var msg = result.EnsureSuccessStatusCode();
-                return await msg.Content.ReadAsStringAsync();
+                var req = new HttpRequestMessage(HttpMethod.Post, $"{FacebookSettings.FB_PAGE_ID}/photos") { Content = content };
+                var res = await httpClient.SendAsync(req);
+                return await res.Content.ReadAsStringAsync();
             }
 
         }
+       
     }
 }

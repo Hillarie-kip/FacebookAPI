@@ -11,4 +11,11 @@ namespace Facebook
         public string LastName { get; set; }
         public string Gender { get; set; }
     }
+
+    public class PostMessageModel
+    {
+          public string url { get; set; }
+        public bool published { get; set; }
+     
+    }
 }
